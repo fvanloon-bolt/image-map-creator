@@ -9,7 +9,7 @@ import * as download from "downloadjs";
 //@ts-ignore no types for this lib
 import UndoManager from "undo-manager";
 //@ts-ignore no types for this lib
-import QuickSettings from "quicksettings";
+//import QuickSettings from "quicksettings";
 //@ts-ignore no types for this lib
 import * as ContextMenu from "../lib/contextmenu/contextmenu";
 import "../lib/contextmenu/contextmenu.css";
@@ -39,7 +39,7 @@ export class imageMapCreator {
 	protected height: number;
 	protected tool: Tool;
 	protected drawingTools: Tool[];
-	protected settings: any;
+	//protected settings: any;
 	protected menu = {
 		SetUrl: {
 			onSelect: (target: Element, key: any, item: HTMLElement, area: Area) => { this.setAreaUrl(area); },
@@ -89,7 +89,7 @@ export class imageMapCreator {
 		this.height = height;
 		this.tool = "polygon";
 		this.drawingTools = ["rectangle", "circle", "polygon"];
-		this.settings;
+		//this.settings;
 		this.tempArea = new AreaEmpty();
 		this.selection = new Selection();
 		this.hoveredArea = null;
@@ -142,24 +142,24 @@ export class imageMapCreator {
 		let canvas = this.p5.createCanvas(this.width, this.height);
 		canvas.drop(this.handeFile.bind(this)).dragLeave(this.onLeave.bind(this)).dragOver(this.onOver.bind(this));
 		//@ts-ignore p5 types does not specify the canvas attribute
-		this.settings = QuickSettings.create(this.p5.width + 5, 0, "Image-map Creator", this.p5.canvas.parentElement)
-			.setDraggable(false)
-			.addText("Map Name", "", (v: string) => { this.map.setName(v) })
-			.addDropDown("Tool", ["polygon", "rectangle", "circle", "select", "delete", "test"], (v: ToolLabel) => { this.setTool(v.value) })
-			.addBoolean("Default Area", this.map.hasDefaultArea, (v: boolean) => { this.setDefaultArea(v) })
-			.addButton("Undo", this.undoManager.undo)
-			.addButton("Redo", this.undoManager.redo)
-			.addButton("Clear", this.clearAreas.bind(this))
-			.addButton("Generate Html", () => { this.settings.setValue("Output", this.map.toHtml()) })
-			.addButton("Generate Svg", () => { this.settings.setValue("Output", this.map.toSvg()) })
-			.addTextArea("Output")
-			.addButton("Save", this.save.bind(this));
+		// this.settings = QuickSettings.create(this.p5.width + 5, 0, "Image-map Creator", this.p5.canvas.parentElement)
+		// 	.setDraggable(false)
+		// 	.addText("Map Name", "", (v: string) => { this.map.setName(v) })
+		// 	.addDropDown("Tool", ["polygon", "rectangle", "circle", "select", "delete", "test"], (v: ToolLabel) => { this.setTool(v.value) })
+		// 	.addBoolean("Default Area", this.map.hasDefaultArea, (v: boolean) => { this.setDefaultArea(v) })
+		// 	.addButton("Undo", this.undoManager.undo)
+		// 	.addButton("Redo", this.undoManager.redo)
+		// 	.addButton("Clear", this.clearAreas.bind(this))
+		// 	.addButton("Generate Html", () => { this.settings.setValue("Output", this.map.toHtml()) })
+		// 	.addButton("Generate Svg", () => { this.settings.setValue("Output", this.map.toSvg()) })
+		// 	.addTextArea("Output")
+		// 	.addButton("Save", this.save.bind(this));
 		//@ts-ignore Fix for oncontextmenu
 		this.p5.canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); });
 		//@ts-ignore Fix for middle click mouse down triggers scroll on windows
 		this.p5.canvas.addEventListener("mousedown", (e) => { e.preventDefault(); });
 		//@ts-ignore Select all onclick on the Output field
-		document.getElementById("Output").setAttribute("onFocus", "this.select();");
+		//document.getElementById("Output").setAttribute("onFocus", "this.select();");
 	}
 
 	private draw(): void {
@@ -399,7 +399,7 @@ export class imageMapCreator {
 			this.img.file = file.file;
 			if (!this.map.getName()) {
 				this.map.setName(file.name);
-				this.settings.setValue("Map Name", this.map.getName());
+				// this.settings.setValue("Map Name", this.map.getName());
 			}
 		} else if (file.subtype == 'json') {
 			fetch(file.data)
@@ -416,6 +416,15 @@ export class imageMapCreator {
 				});
 		}
 		this.bgLayer.disappear();
+	}
+
+	loadImage(imgURL: string): void {
+		console.log('Loading image...');
+		this.img.data = this.p5.loadImage(imgURL, img => this.resetView(img));
+		this.img.file = null;
+		this.map.setName('image.png');
+		this.bgLayer.disappear();
+		console.log('Finished Loading image...');
 	}
 
 	resetView(img: p5.Image): void {
@@ -507,7 +516,7 @@ export class imageMapCreator {
 			case "select":
 				if (this.mouseIsHoverSketch()) {
 					let href = this.hoveredArea ? this.hoveredArea.getHrefVerbose() : "none";
-					this.settings.setValue("Output", href);
+					// this.settings.setValue("Output", href);
 				}
 				break;
 		}
@@ -601,8 +610,8 @@ export class imageMapCreator {
 		let object = JSON.parse(json);
 		let objectMap = object.map;
 		this.map.setFromObject(objectMap);
-		this.settings.setValue("Map Name", objectMap.name);
-		this.settings.setValue("Default Area", objectMap.hasDefaultArea);
+		// this.settings.setValue("Map Name", objectMap.name);
+		// this.settings.setValue("Default Area", objectMap.hasDefaultArea);
 		this.reset();
 	}
 
@@ -623,7 +632,7 @@ export class imageMapCreator {
 	deleteArea(area: Area): void {
 		let id = area.id;
 		if (id === 0) {
-			this.settings.setValue("Default Area", false);
+			//this.settings.setValue("Default Area", false);
 		} else {
 			let index = this.map.rmvArea(id);
 			this.undoManager.add({
@@ -680,11 +689,11 @@ export class imageMapCreator {
 		this.undoManager.add({
 			undo: () => {
 				this.map.setDefaultArea(!bool); // semble redondant
-				this.settings.setValue("Default Area", !bool)
+				//this.settings.setValue("Default Area", !bool)
 			},
 			redo: () => {
 				this.map.setDefaultArea(bool); // semble redondant
-				this.settings.setValue("Default Area", bool)
+				//this.settings.setValue("Default Area", bool)
 			}
 		});
 	}

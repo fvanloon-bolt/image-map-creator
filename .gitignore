@@ -7,3 +7,6 @@ node_modules
 dist
 *.log
 .env
+demos/assets/*
+demos/.DS_Store
+.DS_Store

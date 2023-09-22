@@ -7,6 +7,7 @@
 	<title>Images-map creator Demo</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+	<link rel="stylesheet" type="text/css" href="./assets/styles/salesforce-lightning-design-system.css" />
 
 <!-- All you need is these JS libraries -->
 	<script src="../dist/image-map-creator.bundle.js"></script>
@@ -19,6 +20,49 @@
 
 <body>
 
+	<div class="slds-button-group" role="group">
+		<!-- polygon=calculated_insights , square=textarea , circle=routing_offline , select=touch_action , undo , redo -->
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled slds-is-selected" title="Polygon"
+			aria-pressed="true" onclick="enableTool(this)">
+			<img src="./assets/icons/utility/calculated_insights.svg" class="slds-button__icon" />
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Rectangle" aria-pressed="false"
+			onclick="enableTool(this)">
+			<img src="./assets/icons/utility/textarea.svg" class="slds-button__icon" />
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Circle" aria-pressed="false"
+			onclick="enableTool(this)">
+			<img src="./assets/icons/utility/routing_offline.svg" class="slds-button__icon" />
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Select" aria-pressed="false"
+			onclick="enableTool(this)">
+			<img src="./assets/icons/utility/touch_action.svg" class="slds-button__icon" />
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Delete" aria-pressed="false"
+			onclick="enableTool(this)">
+			<img src="./assets/icons/utility/delete.svg"  class="slds-button__icon"/>
+		</button>
+	</div>
+
+	<div class="slds-button-group" role="group">
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Undo" aria-pressed="false"
+			onclick="undo(this)">
+			<img src="./assets/icons/utility/undo.svg" class="slds-button__icon"/>
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Redo" aria-pressed="false"
+			onclick="redo(this)">
+			<img src="./assets/icons/utility/redo.svg" class="slds-button__icon"/>
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Clear" aria-pressed="false"
+			onclick="doClear(this)">
+			<img src="./assets/icons/utility/clear.svg" class="slds-button__icon"/>
+		</button>
+		<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled" title="Save" aria-pressed="false"
+			onclick="doSave()">
+			<img src="./assets/icons/utility/save.svg" class="slds-button__icon"/>
+		</button>
+	</div>
+	
 	<!-- A <div> with an id -->
 	<div id="div-1" style="position: relative;"></div>
 
@@ -40,6 +84,29 @@
 		function logP5() {
 			console.log(imcreator.p5);
 		}
+
+            function enableTool(btn) {
+                let previousElems = document.getElementsByClassName("slds-is-selected");
+                for (let p of previousElems) {
+                    p.classList.remove("slds-is-selected");
+                }
+
+                let toolName = btn.title.toLowerCase();
+                btn.classList.add("slds-is-selected");
+                imcreator.setTool(toolName);
+            }
+            function undo(btn) {
+                imcreator.undoManager.undo();
+            }
+            function redo(btn) {
+                imcreator.undoManager.redo();
+            }
+            function doClear(btn) {
+                imcreator.clearAreas();
+            }
+            function doSave(btn) {
+                imcreator.save();
+            }
 	</script>
 
 </body>
