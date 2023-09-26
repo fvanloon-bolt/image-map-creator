@@ -16,7 +16,7 @@ import "../lib/contextmenu/contextmenu.css";
 //@ts-ignore strange way to import but it's working
 import p5 = require("p5");
 
-export type Tool = "polygon" | "rectangle" | "circle" | "select" | "delete" | "test";
+export type Tool = "polygon" | "rectangle" | "circle" | "select" | "delete" | "test"; // | "bind";
 export type Image = {
 	data: p5.Image|null,
 	file: p5.File|null,
@@ -41,13 +41,17 @@ export class imageMapCreator {
 	protected drawingTools: Tool[];
 	//protected settings: any;
 	protected menu = {
-		SetUrl: {
-			onSelect: (target: Element, key: any, item: HTMLElement, area: Area) => { this.setAreaUrl(area); },
-			label: "Set url",
-		},
+		// SetUrl: {
+		// 	onSelect: (target: Element, key: any, item: HTMLElement, area: Area) => { this.setAreaUrl(area); },
+		// 	label: "Set url",
+		// },
 		SetTitle: {
 			onSelect: (target: Element, key: any, item: HTMLElement, area: Area) => { this.setAreaTitle(area); },
-			label: "Set title",
+			label: "Set label",
+		},
+		BindValues: {
+			onSelect: (target: Element, key: any, item: HTMLElement, area: Area) => { this.bindValuesToUrl(area); },
+			label: "Bind Values",
 		},
 		Delete: (target: Element, key: any, item: HTMLElement, area: Area) => { this.deleteArea(area); },
 		MoveFront: {
@@ -75,6 +79,8 @@ export class imageMapCreator {
 	protected tolerance: number;
 	protected bgLayer: BgLayer;
 	public p5: p5;
+	public readyToBind: string[];
+	public bindingCallback: any;
 
 	/**
 	 * Constructor
@@ -111,6 +117,8 @@ export class imageMapCreator {
 		this.fusion = false;
 		this.tolerance = 6;
 		this.bgLayer = new BgLayer(this);
+		this.readyToBind = [];
+		this.bindingCallback = null;
 		// Must be the last instruction of the constructor.
 		this.p5 = new p5(this.sketch.bind(this), element);
 	}
@@ -377,6 +385,10 @@ export class imageMapCreator {
 						case "delete":
 							this.deleteArea(this.hoveredArea);
 							break;
+						// case "bind":
+						// 	this.selection.clear();
+						// 	this.selection.registerArea(this.hoveredArea);
+						// 	return;
 					}
 				}
 			}
@@ -674,7 +686,7 @@ export class imageMapCreator {
 	 */
 	setAreaTitle(area: Area): void {
 		let title = area.getTitle();
-		let input = prompt("Enter the title of this area", title ? title : "");
+		let input = prompt("Enter the label of this area", title ? title : "");
 		if (input) {
 			area.setTitle(input);
 			this.undoManager.add({
@@ -682,6 +694,58 @@ export class imageMapCreator {
 				redo: () => area.setTitle(input!),
 			});
 		}
+	}
+
+	setBindingCallback(bindFunc: any): void {
+		this.bindingCallback = bindFunc;
+	}
+
+	setReadyToBind(values: string[]) {
+		this.readyToBind = values;
+	}
+
+	/**
+	 * Set the url of an area from bindings
+	 */
+	bindValuesToUrl(area: Area): void {
+		let bindings = [...this.readyToBind];
+		this.readyToBind = [];
+		this.setAreaBindings(area, bindings, true);
+	}
+
+	setAreaBindingsById(areaId: number, bindings: string[]): void {
+		let area : Area|undefined =  this.map.getAreas().find(a => {
+			return a.id == areaId;
+		});
+		if (area) {
+			this.setAreaBindings(area, bindings, false);
+		}
+	}
+
+	setAreaBindings(area : Area, bindings: string[], append: boolean): void {
+		let href = area.getHref();
+		let bindValue = bindings.toString();
+		if (append == true && href !== '') {
+			bindValue = href + ',' + bindValue;
+		}
+		area.setHref(bindValue);
+		this.undoManager.add({
+			undo: () => area.setHref(href),
+			redo: () => area.setHref(bindValue!),
+		});
+		if (this.bindingCallback != null) {
+			this.bindingCallback({ allBindings: this.getAllBindings() });
+		}
+	}
+
+	getAllBindings(): object[] {
+		let result : object[] = [];
+		let allAreas = this.map.getAreas();
+		for (let a of allAreas) {
+			let aresult = { id: a.getId(), label: a.getTitle(), bindings: a.getHref() };
+			result.push(aresult);
+		}
+		return result;
 	}
 
 	setDefaultArea(bool: boolean): void {
