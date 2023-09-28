@@ -28,6 +28,7 @@ export class ImageMap {
 		this.name = iMap.name;
 		this.hasDefaultArea = iMap.hasDefaultArea;
 		this.dArea = Area.fromObject(iMap.dArea) as AreaDefault;
+		this.lastId = iMap.lastId;
 		return this;
 	}
 
