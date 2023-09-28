@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // stores the device context of the canvas we use to draw the outlines
+      // initialized in myInit, used in myHover and myLeave
+      var hdc;
+      var imgRatio;
+
+      // shorthand func
+      function byId(e) {
+        return document.getElementById(e);
+      }
+
+      // takes a string that contains coords eg - "227,307,261,309, 339,354, 328,371, 240,331"
+      // draws a line from each co-ord pair to the next - assumes starting point needs to be repeated as ending point.
+      function drawPoly(coOrdStr) {
+        var mCoords = coOrdStr.split(",");
+        var i, n;
+        n = mCoords.length;
+
+        hdc.beginPath();
+        hdc.moveTo(mCoords[0], mCoords[1]);
+        for (i = 2; i < n; i += 2) {
+          hdc.lineTo(mCoords[i], mCoords[i + 1]);
+        }
+        hdc.lineTo(mCoords[0], mCoords[1]);
+        hdc.stroke();
+
+        hdc.fillStyle = "rgba(70, 177, 201, 0.5)";
+        hdc.fill();
+      }
+
+      function drawRect(coOrdStr) {
+        var mCoords = coOrdStr.split(",");
+        var top, left, bot, right;
+        left = mCoords[0];
+        top = mCoords[1];
+        right = mCoords[2];
+        bot = mCoords[3];
+        hdc.strokeRect(left, top, right - left, bot - top);
+      }
+
+      function myHover(element, event) {
+        var hoveredElement = element;
+        var coordStr = element.getAttribute("coords");
+        var areaType = element.getAttribute("shape");
+
+        switch (areaType) {
+          case "polygon":
+          case "poly":
+            drawPoly(coordStr);
+            break;
+
+          case "rect":
+            drawRect(coordStr);
+        }
+
+        let x = event.clientX;
+        let y = event.clientY;
+        //let _position = `X: ${x}<br>Y: ${y}`;
+        let info_content = element
+          .getAttribute("href")
+          .replaceAll(",", "<br/>");
+
+        const infoElement = document.getElementById("info");
+        infoElement.innerHTML = info_content;
+        infoElement.style.top = y + "px";
+        infoElement.style.left = x + 20 + "px";
+      }
+
+      function myLeave() {
+        var canvas = byId("myCanvas");
+        hdc.clearRect(0, 0, canvas.width, canvas.height);
+
+        const infoElement = document.getElementById("info");
+        infoElement.innerHTML = "";
+      }
+
+      function myInit() {
+        // get the target image
+        var img = byId("img-imgmap201293016112");
+
+        var x, y, w, h;
+
+        // get it's position and width+height
+        x = img.offsetLeft;
+        y = img.offsetTop;
+        w = img.clientWidth;
+        h = img.clientHeight;
+
+        let fullW = img.naturalWidth;
+        imgRatio = w / fullW; // NOTE: This ratio needs to be multiplied by each coordinate in the map/area/coords
+
+        // move the canvas, so it's contained by the same parent as the image
+        var imgParent = img.parentNode;
+        var can = byId("myCanvas");
+        imgParent.appendChild(can);
+
+        // place the canvas in front of the image
+        can.style.zIndex = 2;
+
+        // position it over the image
+        can.style.left = x + "px";
+        can.style.top = y + "px";
+
+        // make same size as the image
+        can.setAttribute("width", w + "px");
+        can.setAttribute("height", h + "px");
+
+        // get it's context
+        hdc = can.getContext("2d");
+
+        // set the 'default' values for the colour/width of fill/stroke operations
+        hdc.fillStyle = "red";
+        hdc.strokeStyle = "red";
+        hdc.lineWidth = 2;
+
+        // AREA OUTLINES
+        var ao = byId("areaOutlines");
+        imgParent.appendChild(ao);
+
+        // place the canvas in front of the image
+        ao.style.zIndex = 1;
+
+        // position it over the image
+        ao.style.left = x + "px";
+        ao.style.top = y + "px";
+
+        // make same size as the image
+        ao.setAttribute("width", w + "px");
+        ao.setAttribute("height", h + "px");
+
+        // get it's context
+        let aoCtx = ao.getContext("2d");
+
+        // set the 'default' values for the colour/width of fill/stroke operations
+        aoCtx.fillStyle = "#46B1C9";
+        aoCtx.strokeStyle = "#46B1C9";
+        aoCtx.lineWidth = 2;
+
+        let allPolys = document.querySelectorAll("area[shape=poly]");
+        for (let p of allPolys) {
+          drawPolyOutline(p, aoCtx);
+        }
+      }
+
+      function drawPolyOutline(element, ctx) {
+        var coordStr = element.getAttribute("coords");
+
+        var mCoords = coordStr.split(",");
+        var i, n;
+        n = mCoords.length;
+
+        ctx.beginPath();
+        ctx.moveTo(mCoords[0], mCoords[1]);
+        for (i = 2; i < n; i += 2) {
+          ctx.lineTo(mCoords[i], mCoords[i + 1]);
+        }
+        ctx.lineTo(mCoords[0], mCoords[1]);
+        ctx.stroke();
+      }
+    </script>
+
+    <style>
+      body {
+        background-color: gray;
+      }
+      canvas {
+        pointer-events: none; /* make the canvas transparent to the mouse - needed since canvas is position infront of image */
+        position: absolute;
+      }
+      #info {
+        padding-left: 10px;
+        border-radius: 10px;
+        position: absolute;
+        user-select: none;
+        color: #eeeeee;
+        background-color: #46b1c9;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-size: small;
+      }
+      #info-backup {
+        font-size: 2em;
+        width: 120px;
+      }
+    </style>
+
+    <title></title>
+  </head>
+  <body onload="myInit()">
+    <canvas id="myCanvas"></canvas>
+    <!-- gets re-positioned in myInit(); -->
+    <canvas id="areaOutlines"></canvas>
+    <!-- gets re-positioned in myInit(); -->
+    <center>
+      <div id="info"></div>
+      <img
+        src="Bevi-Countertop-Gray-1024x702.png"
+        usemap="#imgmap_css_container_imgmap201293016112"
+        class="imgmap_css_container"
+        title="imgmap201293016112"
+        alt="imgmap201293016112"
+        id="img-imgmap201293016112"
+      />
+      <!--width="500px" -->
+      <map
+        id="imgmap201293016112"
+        name="imgmap_css_container_imgmap201293016112"
+      >
+        <area
+          shape="poly"
+          id="6"
+          title="Filter"
+          href="filterExpectedServiceDate,filterPercentRemaining,filterType"
+          coords="75,332,133,332,133,501,75,501"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="4"
+          title="Flavor4"
+          href="expectedServiceDate4,expirationDate4,flavorCode4,flavorName4,percentRemaining4,slot4"
+          coords="793,595,872,600,889,588,887,534,868,544,791,537"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="3"
+          title="Flavor3"
+          href="expectedServiceDate3,expirationDate3,percentRemaining3,slot3,flavorCode3,flavorName3"
+          coords="791,537,868,544,887,534,884,472,866,484,791,479"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="5"
+          title="Fridge"
+          href=""
+          coords="476,397,617,397,617,614,476,614"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="2"
+          title="Flavor2"
+          href="expectedServiceDate2,expirationDate2,flavorCode2,flavorName2,percentRemaining2,slot2"
+          coords="791,479,866,484,884,472,885,414,867,426,789,421"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="1"
+          title="Flavor1"
+          href="expectedServiceDate1,expirationDate1,flavorCode1,flavorName1,percentRemaining1,slot1"
+          coords="789,367,791,422,868,427,887,416,887,345,818,343"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+        <area
+          shape="poly"
+          id="7"
+          title="Display"
+          href=""
+          coords="521,57,624,57,624,128,521,128"
+          onmouseover="myHover(this,event);"
+          onmouseout="myLeave();"
+        />
+      </map>
+    </center>
+  </body>
+</html>
