@@ -541,7 +541,7 @@ export class imageMapCreator {
 			this.p5.fill(0);
 			this.p5.textAlign(this.p5.CENTER, this.p5.CENTER);
 			this.p5.textSize(15);
-			let text = 'Drag and drop an image and/or a .map.json save file here';
+			let text = 'Drag and drop an image file here';
 			this.p5.text(text, this.p5.width / 2, this.p5.height / 2);
 		}
 	}
